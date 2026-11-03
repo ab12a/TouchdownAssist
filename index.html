@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentStay</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f7fa;color:#1f2937}
+header{background:#17324d;color:#fff;padding:22px 8%}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:20px}
+header h1{font-size:28px}
+header p{margin-top:5px;color:#dbe7f1}
+.language-switch{display:flex;gap:4px}
+.language-button{margin:0;padding:7px 11px;background:transparent;border:1px solid #b9ccdc;color:#fff;font-size:13px}
+.language-button:hover{background:#31516b}
+.language-button.active{background:#fff;color:#17324d}
+.container{width:84%;max-width:1200px;margin:30px auto}
+.panel,.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.panel{padding:25px;margin-bottom:25px}
+h2{margin-bottom:18px}
+.login-form{display:flex;gap:10px}
+input,select{width:100%;padding:11px;border:1px solid #ccd4dc;border-radius:7px;font-size:15px}
+button{border:0;border-radius:7px;padding:11px 18px;background:#246b9e;color:#fff;cursor:pointer;font-size:15px}
+button:hover{background:#1c557d}
+button:disabled{opacity:.7;cursor:default}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+label{display:block;font-weight:bold;margin-bottom:6px}
+.profile>button{margin-top:20px}
+.section-header,.card-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.section-header{margin-bottom:15px}
+.section-header span{color:#6b7280;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+#savedListings{display:grid;grid-template-columns:1fr;gap:10px}
+.card{padding:20px}
+.card h3{font-size:19px}
+.match,.saved-badge{background:#e6f5ea;color:#23733b;padding:6px 10px;border-radius:20px;font-weight:bold;white-space:nowrap}
+.price{font-size:21px;font-weight:bold;margin:15px 0 10px}
+.details{line-height:1.8;color:#4b5563}
+.status{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:6px;font-size:13px;font-weight:bold}
+.available{background:#e7f6ec;color:#26733b}
+.reasons{margin-top:14px;padding:12px;background:#f7f9fb;border-radius:8px}
+.reasons h4{margin-bottom:7px}
+.reasons li{list-style:none;margin:5px 0;font-size:14px}
+.actions{display:flex;gap:10px;margin-top:15px}
+.actions button{flex:1}
+.secondary{background:#e8edf2;color:#243447}
+.secondary:hover{background:#dce3e9}
+.danger{background:#b84040}
+.danger:hover{background:#983434}
+.saved-button{background:#3a8f55}.saved-card{background:#fff;border:1px solid #e1e6eb;border-radius:10px;padding:15px}.saved-top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.saved-card h3{font-size:17px;margin-bottom:7px}.saved-details{margin:0;color:#4b5563;font-size:14px}.saved-city{margin-top:6px;color:#6b7280;font-size:14px}.saved-actions{display:flex;gap:10px;margin-top:12px}.saved-actions button{flex:1}.saved-badge{font-size:13px}
+.message{margin-top:12px;font-weight:bold}
+.success-message{color:#26733b}
+.error-message{color:#a12f2f}
+.empty{grid-column:1/-1;text-align:center;padding:35px}
+.empty p{margin-top:8px;color:#6b7280}
+@media(max-width:800px){
+ .container{width:92%}
+ .form-grid,.cards{grid-template-columns:1fr}
+ .login-form{flex-direction:column}
+ .card-top{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="header-row">
+<div>
+<h1>StudentStay</h1>
+<p id="tagline">Find accommodation that fits your studies.</p>
+</div>
+<div class="language-switch">
+<button id="enButton" class="language-button active" onclick="setLanguage('en')">EN</button>
+<button id="deButton" class="language-button" onclick="setLanguage('de')">DE</button>
+</div>
+</div>
+</header>
+
+<main class="container">
+
+<section class="panel">
+<h2 id="loginTitle">StudentStay Login</h2>
+<div class="login-form">
+<input id="loginEmail" type="email" placeholder="Email" value="student@test.com">
+<input id="loginPassword" type="password" placeholder="Password" value="password123">
+<button id="loginButton" onclick="login()">Login</button>
+</div>
+<p id="loginMessage" class="message"></p>
+</section>
+
+<section class="panel profile">
+<h2 id="profileTitle">Your Accommodation Profile</h2>
+<div class="form-grid">
+<div>
+<label id="universityLabel" for="university">University</label>
+<select id="university"><option value="">Loading universities...</option></select>
+</div>
+<div>
+<label id="semesterLabel" for="semester">Semester</label>
+<select id="semester">
+<option value="Winter 2026">Winter 2026</option>
+<option value="Summer 2027">Summer 2027</option>
+</select>
+</div>
+<div>
+<label id="arrivalLabel" for="arrival">Expected arrival</label>
+<input id="arrival" type="date" value="2026-09-20">
+</div>
+<div>
+<label id="endLabel" for="end">Accommodation needed until</label>
+<input id="end" type="date" value="2027-03-31">
+</div>
+<div>
+<label id="budgetLabel" for="budget">Maximum monthly rent (€)</label>
+<input id="budget" type="number" value="700" min="1">
+</div>
+<div>
+<label id="commuteLabel" for="commute">Maximum commute (minutes)</label>
+<input id="commute" type="number" value="40" min="1">
+</div>
+<div>
+<label id="roomLabel" for="room">Room type</label>
+<select id="room">
+<option value="private">Private</option>
+<option value="shared">Shared</option>
+</select>
+</div>
+<div>
+<label id="furnishedLabel" for="furnished">Furnished</label>
+<select id="furnished">
+<option value="true">Yes</option>
+<option value="false">No</option>
+</select>
+</div>
+</div>
+<button id="findButton" onclick="showMatches()">Find my matches</button>
+<p id="profileMessage" class="message"></p>
+</section>
+
+<section class="panel">
+<div class="section-header">
+<h2 id="matchesTitle">Best Matches</h2>
+<span id="matchCount">No matches loaded</span>
+</div>
+<div id="matches" class="cards">
+<div class="card empty"><h3>No matches loaded</h3><p>Complete your profile and click "Find my matches".</p></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="section-header">
+<h2 id="savedTitle">Saved Accommodations</h2>
+<span id="savedCount">No saved listings</span>
+</div>
+<div id="savedListings" class="cards">
+<div class="card empty"><h3>No saved accommodations yet</h3><p>Save an accommodation from your matches and it will appear here.</p></div>
+</div>
+<p id="savedMessage" class="message"></p>
+</section>
+
+</main>
+
+<script>
+const API="http://127.0.0.1:5000/api";
+const PROFILE_KEY="studentstay_profile";
+let loggedInUser=null;
+let savedListings=[];
+
+const $=id=>document.getElementById(id);
+
+function escapeHtml(value){
+    return String(value??"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function message(id,text,type=""){
+    $(id).textContent=text;
+    $(id).className="message "+type;
+}
+
+function getStoredUser(){
+    try{return JSON.parse(localStorage.getItem("studentstay_user"))}
+    catch{return null}
+}
+
+function getProfile(){
+    return {
+        university:$("university").value,
+        semester:$("semester").value,
+        arrival:$("arrival").value,
+        end:$("end").value,
+        budget:$("budget").value,
+        commute:$("commute").value,
+        room:$("room").value,
+        furnished:$("furnished").value
+    };
+}
+
+function saveProfile(){
+    localStorage.setItem(PROFILE_KEY,JSON.stringify(getProfile()));
+}
+
+function restoreProfile(){
+    try{
+        const p=JSON.parse(localStorage.getItem(PROFILE_KEY));
+        if(!p)return;
+        ["university","semester","arrival","end","budget","commute","room","furnished"]
+            .forEach(id=>{if(p[id]!==undefined)$(id).value=p[id]});
+    }catch(error){console.error("Could not restore profile:",error)}
+}
+
+
+const translations={
+en:{
+tagline:"Find accommodation that fits your studies.",
+loginTitle:"StudentStay Login",loginButton:"Login",
+profileTitle:"Your Accommodation Profile",university:"University",semester:"Semester",
+arrival:"Expected arrival",end:"Accommodation needed until",
+budget:"Maximum monthly rent (€)",commute:"Maximum commute (minutes)",
+room:"Room type",furnished:"Furnished",find:"Find my matches",
+best:"Best Matches",saved:"Saved Accommodations",
+noMatches:"No matches loaded",completeProfile:'Complete your profile and click "Find my matches".',
+noSuitable:"No suitable matches found",tryLimits:"Try increasing your rent or commute limit.",
+noSaved:"No saved accommodations yet",saveHint:"Save an accommodation from your matches and it will appear here.",
+why:"Why it matches",available:"Available",savedBadge:"Saved ✓",save:"Save",apply:"Apply",remove:"Remove",
+yes:"Yes",no:"No",private:"Private",shared:"Shared",furnishedWord:"Furnished",unfurnished:"Unfurnished",
+commuteUnavailable:"Commute not available",savedOne:"saved listing",savedMany:"saved listings",
+matchOne:"suitable listing found",matchMany:"suitable listings found",
+updated:"Matches updated.",saving:"Saving accommodation...",savedMsg:"Accommodation saved.",
+removing:"Removing accommodation...",removed:"Accommodation removed.",
+application:"Application submitted.",loggingIn:"Logging in...",loginFailed:"Login failed.",
+loginAs:"Logged in as",connect:"Could not connect to StudentStay backend.",
+selectUniversity:"Select your university",loadingUniversities:"Loading universities...",
+universitiesError:"Could not load universities"
+},
+de:{
+tagline:"Finde eine Unterkunft, die zu deinem Studium passt.",
+loginTitle:"StudentStay Anmeldung",loginButton:"Anmelden",
+profileTitle:"Dein Unterkunftsprofil",university:"Universität / Hochschule",semester:"Semester",
+arrival:"Voraussichtliche Ankunft",end:"Unterkunft benötigt bis",
+budget:"Maximale Monatsmiete (€)",commute:"Maximale Pendelzeit (Minuten)",
+room:"Zimmertyp",furnished:"Möbliert",find:"Passende Unterkünfte finden",
+best:"Passende Unterkünfte",saved:"Gespeicherte Unterkünfte",
+noMatches:"Noch keine Treffer geladen",completeProfile:"Fülle dein Profil aus und klicke auf „Passende Unterkünfte finden“.",
+noSuitable:"Keine passenden Unterkünfte gefunden",tryLimits:"Versuche, dein Miet- oder Pendellimit zu erhöhen.",
+noSaved:"Noch keine Unterkünfte gespeichert",saveHint:"Speichere eine Unterkunft aus deinen Treffern, damit sie hier erscheint.",
+why:"Warum es passt",available:"Verfügbar",savedBadge:"Gespeichert ✓",save:"Speichern",apply:"Anfragen",remove:"Entfernen",
+yes:"Ja",no:"Nein",private:"Privat",shared:"Geteilt",furnishedWord:"Möbliert",unfurnished:"Unmöbliert",
+commuteUnavailable:"Keine Pendelzeit verfügbar",savedOne:"gespeicherte Unterkunft",savedMany:"gespeicherte Unterkünfte",
+matchOne:"passende Unterkunft gefunden",matchMany:"passende Unterkünfte gefunden",
+updated:"Treffer aktualisiert.",saving:"Unterkunft wird gespeichert...",savedMsg:"Unterkunft gespeichert.",
+removing:"Unterkunft wird entfernt...",removed:"Unterkunft entfernt.",
+application:"Anfrage wurde gesendet.",loggingIn:"Anmeldung läuft...",loginFailed:"Anmeldung fehlgeschlagen.",
+loginAs:"Angemeldet als",connect:"Verbindung zum StudentStay-Backend nicht möglich.",
+selectUniversity:"Universität / Hochschule auswählen",loadingUniversities:"Universitäten werden geladen...",
+universitiesError:"Universitäten konnten nicht geladen werden"
+}
+};
+
+let currentLanguage=localStorage.getItem("studentstay_language")||"en";
+function t(key){return translations[currentLanguage][key]||translations.en[key]||key;}
+
+function translateReason(reason){
+if(currentLanguage==="en")return reason;
+let m=reason.match(/^(.+), furnished room as requested$/i);
+if(m)return `${m[1]}, möbliertes Zimmer wie gewünscht`;
+m=reason.match(/^Matches your (.+) room requirement$/i);
+if(m)return `Entspricht deinem Wunsch nach einem ${m[1]}en Zimmer`;
+if(reason==="Furnished accommodation")return "Möblierte Unterkunft";
+m=reason.match(/^€(\d+) below your €(\d+) maximum rent$/);
+if(m)return `€${m[1]} unter deiner maximalen Miete von €${m[2]}`;
+m=reason.match(/^(\d+)-minute commute within your (\d+)-minute limit$/);
+if(m)return `${m[1]} Minuten Pendelzeit innerhalb deines Limits von ${m[2]} Minuten`;
+if(reason==="Available for your required dates")return "Für deinen gewünschten Zeitraum verfügbar";
+if(reason==="Available by your arrival date")return "Bis zu deinem Ankunftsdatum verfügbar";
+if(reason==="Available until your required date")return "Bis zu deinem gewünschten Enddatum verfügbar";
+return reason;
+}
+
+function setLanguage(language){
+currentLanguage=language;
+localStorage.setItem("studentstay_language",language);
+document.documentElement.lang=language;
+$("tagline").textContent=t("tagline");
+$("loginTitle").textContent=t("loginTitle");
+$("loginButton").textContent=t("loginButton");
+$("profileTitle").textContent=t("profileTitle");
+$("universityLabel").textContent=t("university");
+$("semesterLabel").textContent=t("semester");
+$("arrivalLabel").textContent=t("arrival");
+$("endLabel").textContent=t("end");
+$("budgetLabel").textContent=t("budget");
+$("commuteLabel").textContent=t("commute");
+$("roomLabel").textContent=t("room");
+$("furnishedLabel").textContent=t("furnished");
+$("findButton").textContent=t("find");
+$("matchesTitle").textContent=t("best");
+$("savedTitle").textContent=t("saved");
+$("enButton").classList.toggle("active",language==="en");
+$("deButton").classList.toggle("active",language==="de");
+$("loginPassword").placeholder=language==="de"?"Passwort":"Password";
+$("room").options[0].textContent=t("private");
+$("room").options[1].textContent=t("shared");
+$("furnished").options[0].textContent=t("yes");
+$("furnished").options[1].textContent=t("no");
+displayMatches(lastMatches);
+displaySaved();
+}
+let lastMatches=[];
+
+async function login(){
+    const email=$("loginEmail").value.trim();
+    const password=$("loginPassword").value;
+
+    if(!email||!password){
+        message("loginMessage",currentLanguage==="de"?"Bitte E-Mail und Passwort eingeben.":"Please enter your email and password.","error-message");
+        return;
+    }
+
+    message("loginMessage",t("loggingIn"));
+
+    try{
+        const response=await fetch(`${API}/login`,{
+            method:"POST",
+            credentials:"include",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({email,password})
+        });
+        const data=await response.json();
+
+        if(!response.ok){
+            loggedInUser=null;
+            localStorage.removeItem("studentstay_user");
+            message("loginMessage",data.error||t("loginFailed"),"error-message");
+            return;
+        }
+
+        loggedInUser=data.user;
+        localStorage.setItem("studentstay_user",JSON.stringify(data.user));
+        message("loginMessage",`${t("loginAs")} ${data.user.name}`,"success-message");
+        await loadSaved();
+        await loadExistingMatches();
+    }catch(error){
+        console.error(error);
+        message("loginMessage",t("connect"),"error-message");
+    }
+}
+
+async function loadUniversities(){
+    const select=$("university");
+
+    try{
+        const response=await fetch(`${API}/universities`);
+        const data=await response.json();
+
+        if(!response.ok)throw new Error(data.error||"Could not load universities.");
+
+        select.innerHTML=`<option value="">${t("selectUniversity")}</option>`;
+
+        data.universities.forEach(u=>{
+            const option=document.createElement("option");
+            option.value=u.name;
+            option.textContent=`${u.name} — ${u.city}`;
+            option.dataset.id=u.id;
+            option.dataset.city=u.city;
+            option.dataset.latitude=u.latitude;
+            option.dataset.longitude=u.longitude;
+            select.appendChild(option);
+        });
+
+        restoreProfile();
+    }catch(error){
+        console.error("University loading error:",error);
+        select.innerHTML=`<option value="">${t("universitiesError")}</option>`;
+    }
+}
+
+async function showMatches(){
+    saveProfile();
+
+    if(!$("university").value){
+        message("profileMessage",currentLanguage==="de"?"Bitte wähle deine Universität / Hochschule.":"Please select your university.","error-message");
+        return;
+    }
+
+    message("profileMessage",currentLanguage==="de"?"Profil wird gespeichert und Treffer werden gesucht...":"Saving profile and finding matches...");
+
+    const profile={
+        university:$("university").value,
+        arrival_date:$("arrival").value,
+        required_until:$("end").value,
+        max_rent:Number($("budget").value),
+        max_upfront_budget:2000,
+        room_type:$("room").value,
+        furnished:$("furnished").value==="true",
+        max_commute_minutes:Number($("commute").value)
+    };
+
+    try{
+        const profileResponse=await fetch(`${API}/student-profile`,{
+            method:"POST",
+            credentials:"include",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(profile)
+        });
+        const profileData=await profileResponse.json();
+
+        if(!profileResponse.ok){
+            message("profileMessage",profileData.error||(currentLanguage==="de"?"Profil konnte nicht gespeichert werden.":"Could not save profile."),"error-message");
+            return;
+        }
+
+        const response=await fetch(`${API}/matches`,{credentials:"include"});
+        const data=await response.json();
+
+        if(!response.ok){
+            message("profileMessage",data.error||(currentLanguage==="de"?"Treffer konnten nicht geladen werden.":"Could not load matches."),"error-message");
+            return;
+        }
+
+        displayMatches(data.matches||[]);
+        message("profileMessage",t("updated"),"success-message");
+        await loadSaved();
+    }catch(error){
+        console.error(error);
+        message("profileMessage","Could not connect to StudentStay backend.","error-message");
+    }
+}
+
+function displayMatches(matches){
+lastMatches=matches||[];
+const container=$("matches");
+$("matchCount").textContent=`${lastMatches.length} ${lastMatches.length===1?t("matchOne"):t("matchMany")}`;
+container.innerHTML="";
+if(!lastMatches.length){
+container.innerHTML=`<div class="card empty"><h3>${t("noMatches")}</h3><p>${t("completeProfile")}</p></div>`;
+return;
+}
+lastMatches.forEach(listing=>{
+const score=Number.isFinite(Number(listing.match_score))?Number(listing.match_score):0;
+const reasons=(listing.match_reasons||[]).map(r=>`<li>✓ ${escapeHtml(translateReason(r))}</li>`).join("");
+const saved=isSaved(listing.id);
+const furnished=listing.furnished?t("furnishedWord"):t("unfurnished");
+const commute=listing.commute_minutes!=null?`${listing.commute_minutes} ${currentLanguage==="de"?"Minuten Pendelzeit":"minutes commute"}`:t("commuteUnavailable");
+const card=document.createElement("article");
+card.className="card";
+card.innerHTML=`
+<div class="card-top"><h3>${escapeHtml(listing.title)}</h3><span class="match">${score}% match</span></div>
+<p class="price">€${Number(listing.monthly_rent).toFixed(0)} / ${currentLanguage==="de"?"Monat":"month"}</p>
+<div class="details">
+🛏 ${escapeHtml(listing.room_type)} ${currentLanguage==="de"?"Zimmer":"room"}<br>
+🪑 ${furnished}<br>
+🚆 ${escapeHtml(commute)}<br>
+📅 ${currentLanguage==="de"?"Verfügbar ab":"Available from"} ${escapeHtml(listing.available_from)}<br>
+📍 ${escapeHtml(listing.city||listing.address)}
+</div>
+<span class="status available">${t("available")}</span>
+<div class="reasons"><h4>${t("why")}</h4><ul>${reasons}</ul></div>
+<div class="actions">
+${saved?`<button class="saved-button" disabled>${t("savedBadge")}</button>`:`<button onclick="saveAccommodation(${listing.id})">${t("save")}</button>`}
+<button class="secondary" onclick="applyAccommodation(${listing.id})">${t("apply")}</button>
+</div>`;
+container.appendChild(card);
+});
+}
+
+async function loadSaved(){
+try{
+const response=await fetch(`${API}/saved`,{credentials:"include"});
+if(!response.ok)return;
+const data=await response.json();
+savedListings=data.accommodations||[];
+displaySaved();
+}catch(error){console.error("Could not load saved listings:",error)}
+}
+
+function displaySaved(){
+const container=$("savedListings");
+$("savedCount").textContent=`${savedListings.length} ${savedListings.length===1?t("savedOne"):t("savedMany")}`;
+container.innerHTML="";
+if(!savedListings.length){
+container.innerHTML=`<div class="card empty"><h3>${t("noSaved")}</h3><p>${t("saveHint")}</p></div>`;
+return;
+}
+savedListings.forEach(listing=>{
+const card=document.createElement("article");
+card.className="saved-card";
+card.innerHTML=`
+<div class="saved-top"><div>
+<h3>${escapeHtml(listing.title)}</h3>
+<p class="saved-details">€${Number(listing.monthly_rent).toFixed(0)} / ${currentLanguage==="de"?"Monat":"month"} • ${escapeHtml(listing.room_type.toLowerCase())} • ${listing.furnished?t("furnishedWord"):t("unfurnished")} • ${listing.commute_minutes!=null?listing.commute_minutes+" min":t("commuteUnavailable")}</p>
+<p class="saved-city">📍 ${escapeHtml(listing.city||listing.address)}</p>
+</div><span class="saved-badge">${t("savedBadge")}</span></div>
+<div class="saved-actions"><button class="danger" onclick="removeSaved(${listing.id})">${t("remove")}</button><button class="secondary" onclick="applyAccommodation(${listing.id})">${t("apply")}</button></div>`;
+container.appendChild(card);
+});
+}
+
+function isSaved(id){
+    return savedListings.some(listing=>Number(listing.id)===Number(id));
+}
+
+async function saveAccommodation(id){
+    message("savedMessage",t("saving"));
+    try{
+        const response=await fetch(`${API}/saved/${id}`,{
+            method:"POST",
+            credentials:"include"
+        });
+        const data=await response.json();
+
+        if(!response.ok){
+            message("savedMessage",data.error||(currentLanguage==="de"?"Unterkunft konnte nicht gespeichert werden.":"Could not save accommodation."),"error-message");
+            return;
+        }
+
+        message("savedMessage",t("savedMsg"),"success-message");
+        await loadSaved();
+    }catch(error){
+        console.error(error);
+        message("savedMessage","Could not connect to StudentStay backend.","error-message");
+    }
+}
+
+async function removeSaved(id){
+    message("savedMessage",t("removing"));
+    try{
+        const response=await fetch(`${API}/saved/${id}`,{
+            method:"DELETE",
+            credentials:"include"
+        });
+        const data=await response.json();
+
+        if(!response.ok){
+            message("savedMessage",data.error||(currentLanguage==="de"?"Unterkunft konnte nicht entfernt werden.":"Could not remove accommodation."),"error-message");
+            return;
+        }
+
+        message("savedMessage",t("removed"),"success-message");
+        await loadSaved();
+        await loadExistingMatches();
+    }catch(error){
+        console.error(error);
+        message("savedMessage","Could not connect to StudentStay backend.","error-message");
+    }
+}
+
+async function applyAccommodation(id){
+    try{
+        const response=await fetch(`${API}/applications/${id}`,{
+            method:"POST",
+            credentials:"include"
+        });
+        const data=await response.json();
+
+        if(!response.ok){
+            alert(data.error||(currentLanguage==="de"?"Anfrage konnte nicht gesendet werden.":"Could not submit application."));
+            return;
+        }
+
+        alert(t("application"));
+    }catch(error){
+        console.error(error);
+        alert(t("connect"));
+    }
+}
+
+async function loadExistingMatches(){
+    try{
+        const response=await fetch(`${API}/matches`,{credentials:"include"});
+        if(!response.ok)return;
+        const data=await response.json();
+        if(data.matches?.length)displayMatches(data.matches);
+    }catch(error){
+        console.log("No existing matches.");
+    }
+}
+
+window.addEventListener("DOMContentLoaded",async()=>{
+    loggedInUser=getStoredUser();
+    setLanguage(currentLanguage);
+    await loadUniversities();
+
+    if(!localStorage.getItem(PROFILE_KEY))saveProfile();
+
+    ["university","semester","arrival","end","budget","commute","room","furnished"]
+        .forEach(id=>{
+            $(id).addEventListener("change",saveProfile);
+            $(id).addEventListener("input",saveProfile);
+        });
+
+    if(loggedInUser){
+        await loadSaved();
+        await loadExistingMatches();
+    }
+});
+</script>
+</body>
+</html>

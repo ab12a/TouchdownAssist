@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Databases and local data
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing and temporary files
+.pytest_cache/
+.coverage
+*.log
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Old standalone backup - not part of the active application
+backed_app.py
+
+# Local test-account creation script
+backend/create_test_users.py
