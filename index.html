@@ -181,6 +181,7 @@ function escapeHtml(value){
 function message(id,text,type=""){
     $(id).textContent=text;
     $(id).className="message "+type;
+    $(id).removeAttribute("data-translation-key");
 }
 
 function getStoredUser(){
@@ -218,7 +219,7 @@ function restoreProfile(){
 const translations={
 en:{
 tagline:"Find accommodation that fits your studies.",
-loginTitle:"StudentStay Login",loginButton:"Login",
+loginTitle:"StudentStay Login",loginButton:"Login",emailPlaceholder:"Email",passwordPlaceholder:"Password",
 profileTitle:"Your Accommodation Profile",university:"University",semester:"Semester",
 arrival:"Expected arrival",end:"Accommodation needed until",
 budget:"Maximum monthly rent (€)",commute:"Maximum commute (minutes)",
@@ -235,12 +236,12 @@ updated:"Matches updated.",saving:"Saving accommodation...",savedMsg:"Accommodat
 removing:"Removing accommodation...",removed:"Accommodation removed.",
 application:"Application submitted.",loggingIn:"Logging in...",loginFailed:"Login failed.",
 loginAs:"Logged in as",connect:"Could not connect to StudentStay backend.",
-selectUniversity:"Select your university",loadingUniversities:"Loading universities...",
-universitiesError:"Could not load universities"
+selectUniversity:"Select your university",chooseUniversity:"Please select your university.",loadingUniversities:"Loading universities...",
+universitiesError:"Could not load universities",profileSaveFailed:"Could not save your profile.",matchesLoadFailed:"Could not load matches.",saveFailed:"Could not save this accommodation.",removeFailed:"Could not remove this accommodation.",applicationFailed:"Unable to submit application. The accommodation may not be available or you may have already applied."
 },
 de:{
 tagline:"Finde eine Unterkunft, die zu deinem Studium passt.",
-loginTitle:"StudentStay Anmeldung",loginButton:"Anmelden",
+loginTitle:"StudentStay Anmeldung",loginButton:"Anmelden",emailPlaceholder:"E-Mail",passwordPlaceholder:"Passwort",
 profileTitle:"Dein Unterkunftsprofil",university:"Universität / Hochschule",semester:"Semester",
 arrival:"Voraussichtliche Ankunft",end:"Unterkunft benötigt bis",
 budget:"Maximale Monatsmiete (€)",commute:"Maximale Pendelzeit (Minuten)",
@@ -257,13 +258,15 @@ updated:"Treffer aktualisiert.",saving:"Unterkunft wird gespeichert...",savedMsg
 removing:"Unterkunft wird entfernt...",removed:"Unterkunft entfernt.",
 application:"Anfrage wurde gesendet.",loggingIn:"Anmeldung läuft...",loginFailed:"Anmeldung fehlgeschlagen.",
 loginAs:"Angemeldet als",connect:"Verbindung zum StudentStay-Backend nicht möglich.",
-selectUniversity:"Universität / Hochschule auswählen",loadingUniversities:"Universitäten werden geladen...",
-universitiesError:"Universitäten konnten nicht geladen werden"
+selectUniversity:"Universität / Hochschule auswählen",chooseUniversity:"Bitte wähle deine Universität / Hochschule.",loadingUniversities:"Universitäten werden geladen...",
+universitiesError:"Universitäten konnten nicht geladen werden",profileSaveFailed:"Dein Profil konnte nicht gespeichert werden.",matchesLoadFailed:"Unterkünfte konnten nicht geladen werden.",saveFailed:"Diese Unterkunft konnte nicht gespeichert werden.",removeFailed:"Diese Unterkunft konnte nicht entfernt werden.",applicationFailed:"Anfrage konnte nicht gesendet werden. Die Unterkunft ist möglicherweise nicht mehr verfügbar oder du hast dich bereits beworben."
 }
 };
 
 let currentLanguage=localStorage.getItem("studentstay_language")||"en";
 function t(key){return translations[currentLanguage][key]||translations.en[key]||key;}
+
+// User-facing API errors are translated in the frontend so backend English messages do not leak into German UI.
 
 function translateReason(reason){
 if(currentLanguage==="en")return reason;
@@ -303,13 +306,32 @@ $("matchesTitle").textContent=t("best");
 $("savedTitle").textContent=t("saved");
 $("enButton").classList.toggle("active",language==="en");
 $("deButton").classList.toggle("active",language==="de");
-$("loginPassword").placeholder=language==="de"?"Passwort":"Password";
+$("loginEmail").placeholder=t("emailPlaceholder");
+$("loginPassword").placeholder=t("passwordPlaceholder");
 $("room").options[0].textContent=t("private");
 $("room").options[1].textContent=t("shared");
 $("furnished").options[0].textContent=t("yes");
 $("furnished").options[1].textContent=t("no");
-displayMatches(lastMatches);
+$("semester").options[0].textContent =
+    language === "de" ? "Wintersemester 2026" : "Winter 2026";
+
+$("semester").options[1].textContent =
+    language === "de" ? "Sommersemester 2027" : "Summer 2027";
+const universitySelect = $("university");
+
+if (universitySelect.options.length > 0 && !universitySelect.options[0].value) {
+    universitySelect.options[0].textContent = t("selectUniversity");
+}
+const profileMessage = $("profileMessage");
+    const profileMessageKey = profileMessage.dataset.translationKey;
+    if (profileMessageKey) {
+        profileMessage.textContent = t(profileMessageKey);
+    }
+    displayMatches(lastMatches);
 displaySaved();
+if (loggedInUser) {
+    message("loginMessage", `${t("loginAs")} ${loggedInUser.name}`, "success-message");
+}
 }
 let lastMatches=[];
 
@@ -336,7 +358,7 @@ async function login(){
         if(!response.ok){
             loggedInUser=null;
             localStorage.removeItem("studentstay_user");
-            message("loginMessage",data.error||t("loginFailed"),"error-message");
+            message("loginMessage",t("loginFailed"),"error-message");
             return;
         }
 
@@ -384,7 +406,8 @@ async function showMatches(){
     saveProfile();
 
     if(!$("university").value){
-        message("profileMessage",currentLanguage==="de"?"Bitte wähle deine Universität / Hochschule.":"Please select your university.","error-message");
+        message("profileMessage",t("chooseUniversity"),"error-message");
+        $("profileMessage").dataset.translationKey = "chooseUniversity";
         return;
     }
 
@@ -411,7 +434,7 @@ async function showMatches(){
         const profileData=await profileResponse.json();
 
         if(!profileResponse.ok){
-            message("profileMessage",profileData.error||(currentLanguage==="de"?"Profil konnte nicht gespeichert werden.":"Could not save profile."),"error-message");
+            message("profileMessage",t("profileSaveFailed"),"error-message");
             return;
         }
 
@@ -419,16 +442,20 @@ async function showMatches(){
         const data=await response.json();
 
         if(!response.ok){
-            message("profileMessage",data.error||(currentLanguage==="de"?"Treffer konnten nicht geladen werden.":"Could not load matches."),"error-message");
+            message("profileMessage",t("matchesLoadFailed"),"error-message");
             return;
         }
 
         displayMatches(data.matches||[]);
         message("profileMessage",t("updated"),"success-message");
+        displayMatches(data.matches||[]);
+        message("profileMessage",t("updated"),"success-message");
+        await loadSaved();
+        $("profileMessage").dataset.translationKey = "updated";
         await loadSaved();
     }catch(error){
         console.error(error);
-        message("profileMessage","Could not connect to StudentStay backend.","error-message");
+        message("profileMessage",t("connect"),"error-message");
     }
 }
 
@@ -453,7 +480,7 @@ card.innerHTML=`
 <div class="card-top"><h3>${escapeHtml(listing.title)}</h3><span class="match">${score}% match</span></div>
 <p class="price">€${Number(listing.monthly_rent).toFixed(0)} / ${currentLanguage==="de"?"Monat":"month"}</p>
 <div class="details">
-🛏 ${escapeHtml(listing.room_type)} ${currentLanguage==="de"?"Zimmer":"room"}<br>
+🛏 ${escapeHtml(currentLanguage==="de" ? (String(listing.room_type).toLowerCase()==="private" ? "Privat" : String(listing.room_type).toLowerCase()==="shared" ? "Geteilt" : listing.room_type) : listing.room_type)} ${currentLanguage==="de"?"Zimmer":"room"}<br>
 🪑 ${furnished}<br>
 🚆 ${escapeHtml(commute)}<br>
 📅 ${currentLanguage==="de"?"Verfügbar ab":"Available from"} ${escapeHtml(listing.available_from)}<br>
@@ -493,7 +520,7 @@ card.className="saved-card";
 card.innerHTML=`
 <div class="saved-top"><div>
 <h3>${escapeHtml(listing.title)}</h3>
-<p class="saved-details">€${Number(listing.monthly_rent).toFixed(0)} / ${currentLanguage==="de"?"Monat":"month"} • ${escapeHtml(listing.room_type.toLowerCase())} • ${listing.furnished?t("furnishedWord"):t("unfurnished")} • ${listing.commute_minutes!=null?listing.commute_minutes+" min":t("commuteUnavailable")}</p>
+<p class="saved-details">€${Number(listing.monthly_rent).toFixed(0)} / ${currentLanguage==="de"?"Monat":"month"} • ${escapeHtml(listing.room_type.toLowerCase())} • ${listing.furnished?t("furnishedWord"):t("unfurnished")} • ${listing.commute_minutes!=null?listing.commute_minutes+(currentLanguage==="de"?" Min.":" min"):t("commuteUnavailable")}</p>
 <p class="saved-city">📍 ${escapeHtml(listing.city||listing.address)}</p>
 </div><span class="saved-badge">${t("savedBadge")}</span></div>
 <div class="saved-actions"><button class="danger" onclick="removeSaved(${listing.id})">${t("remove")}</button><button class="secondary" onclick="applyAccommodation(${listing.id})">${t("apply")}</button></div>`;
@@ -515,7 +542,7 @@ async function saveAccommodation(id){
         const data=await response.json();
 
         if(!response.ok){
-            message("savedMessage",data.error||(currentLanguage==="de"?"Unterkunft konnte nicht gespeichert werden.":"Could not save accommodation."),"error-message");
+            message("savedMessage",t("saveFailed"),"error-message");
             return;
         }
 
@@ -523,7 +550,7 @@ async function saveAccommodation(id){
         await loadSaved();
     }catch(error){
         console.error(error);
-        message("savedMessage","Could not connect to StudentStay backend.","error-message");
+        message("savedMessage",t("connect"),"error-message");
     }
 }
 
@@ -537,7 +564,7 @@ async function removeSaved(id){
         const data=await response.json();
 
         if(!response.ok){
-            message("savedMessage",data.error||(currentLanguage==="de"?"Unterkunft konnte nicht entfernt werden.":"Could not remove accommodation."),"error-message");
+            message("savedMessage",t("removeFailed"),"error-message");
             return;
         }
 
@@ -546,7 +573,7 @@ async function removeSaved(id){
         await loadExistingMatches();
     }catch(error){
         console.error(error);
-        message("savedMessage","Could not connect to StudentStay backend.","error-message");
+        message("savedMessage",t("connect"),"error-message");
     }
 }
 
@@ -559,7 +586,7 @@ async function applyAccommodation(id){
         const data=await response.json();
 
         if(!response.ok){
-            alert(data.error||(currentLanguage==="de"?"Anfrage konnte nicht gesendet werden.":"Could not submit application."));
+            alert(t("applicationFailed"));
             return;
         }
 
