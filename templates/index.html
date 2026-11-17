@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TouchdownAssist</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>TouchdownAssist</h1>
+    <p data-i18n="tagline">Find accommodation that fits your studies.</p>
+  </div>
+  <div class="header-buttons">
+    <button id="enButton" class="lang" onclick="setLanguage('en')">EN</button>
+    <button id="deButton" class="lang" onclick="setLanguage('de')">DE</button>
+    <button id="logoutButton" class="lang" onclick="logout()" hidden data-i18n="logout">Logout</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- shown while logged out -->
+  <section id="authBox" class="panel">
+    <h2 data-i18n="loginTitle">Login or register</h2>
+    <div class="form-grid">
+      <div>
+        <label for="name" data-i18n="name">Name (only for registering)</label>
+        <input id="name" type="text">
+      </div>
+      <div>
+        <label for="email" data-i18n="email">Email</label>
+        <input id="email" type="email">
+      </div>
+      <div>
+        <label for="password" data-i18n="password">Password (min. 6 characters)</label>
+        <input id="password" type="password">
+      </div>
+    </div>
+    <div class="row">
+      <button onclick="submitAuth('login')" data-i18n="login">Login</button>
+      <button class="secondary" onclick="submitAuth('register')" data-i18n="register">Register</button>
+    </div>
+    <p id="authMessage" class="message"></p>
+  </section>
+
+  <!-- shown after login -->
+  <div id="appBox" hidden>
+
+    <section class="panel">
+      <h2 data-i18n="profileTitle">Your accommodation profile</h2>
+      <div class="form-grid">
+        <div>
+          <label for="university" data-i18n="university">University</label>
+          <select id="university"></select>
+        </div>
+        <div>
+          <label for="arrival" data-i18n="arrival">Expected arrival</label>
+          <input id="arrival" type="date" value="2026-09-20">
+        </div>
+        <div>
+          <label for="end" data-i18n="end">Accommodation needed until</label>
+          <input id="end" type="date" value="2027-03-31">
+        </div>
+        <div>
+          <label for="rent" data-i18n="rent">Maximum monthly rent (€)</label>
+          <input id="rent" type="number" min="1" value="700">
+        </div>
+        <div>
+          <label for="upfront" data-i18n="upfront">Maximum upfront cost: rent + deposit (€)</label>
+          <input id="upfront" type="number" min="1" value="2000">
+        </div>
+        <div>
+          <label for="commute" data-i18n="commute">Maximum commute (minutes)</label>
+          <input id="commute" type="number" min="1" value="40">
+        </div>
+        <div>
+          <label for="room" data-i18n="room">Room type</label>
+          <select id="room">
+            <option value="PRIVATE" data-i18n="private">Private</option>
+            <option value="SHARED" data-i18n="shared">Shared</option>
+          </select>
+        </div>
+        <div>
+          <label for="furnished" data-i18n="furnishedLabel">Furnished</label>
+          <select id="furnished">
+            <option value="1" data-i18n="yes">Yes</option>
+            <option value="0" data-i18n="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <button onclick="findMatches()" data-i18n="find">Find my matches</button>
+      </div>
+      <p id="profileMessage" class="message"></p>
+    </section>
+
+    <section class="panel">
+      <h2 data-i18n="matchesTitle">Best matches</h2>
+      <p id="matchCount" class="count"></p>
+      <div id="matches" class="cards"></div>
+      <p id="matchMessage" class="message"></p>
+    </section>
+
+    <section class="panel">
+      <h2 data-i18n="savedTitle">Saved accommodations</h2>
+      <div id="saved" class="cards"></div>
+    </section>
+
+    <section class="panel">
+      <h2 data-i18n="tasksTitle">Arrival planner</h2>
+      <p id="taskProgress" class="count"></p>
+      <div id="tasks"></div>
+      <p id="taskMessage" class="message"></p>
+    </section>
+
+  </div>
+</main>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
